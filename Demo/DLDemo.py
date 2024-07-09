@@ -1,26 +1,156 @@
 import tensorflow as tf
+import numpy as np
+from keras.utils.np_utils import to_categorical
+from keras import backend as keras_backend
+from keras.callbacks import LearningRateScheduler
+from keras.optimizers import SGD
+from keras.callbacks import EarlyStopping
+import yaml
+import json
+# 加载MNIST数据集
 mnist = tf.keras.datasets.mnist
+# 例程mnist.load_data()返回一个训练集和一个测试集
+# 用大写字母X来表示数据集的样本，使用小写字母y来表示其标签
+#(离开,向下,向右)约定
+(X_train, y_train), (X_test, y_test) = mnist.load_data()
+#保存输入数据的图像大小
+image_height = X_train.shape[1]
+image_width = X_train.shape[2]
+number_of_pixels = image_height * image_width
+#将数组内容类型转化为浮点数
+X_train = keras_backend.cast_to_floatx(X_train)
+X_test = keras_backend.cast_to_floatx(X_test)
 
-(x_train, y_train), (x_test, y_test) = mnist.load_data()
-x_train, x_test = x_train / 255.0, x_test / 255.0
-model = tf.keras.models.Sequential([
-  tf.keras.layers.Flatten(input_shape=(28, 28)),
-  tf.keras.layers.Dense(128, activation='relu'),
-  tf.keras.layers.Dropout(0.2),
-  tf.keras.layers.Dense(10)
-])
-predictions = model(x_train[:1]).numpy()
-predictions
-tf.nn.softmax(predictions).numpy()
-loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-loss_fn(y_train[:1], predictions).numpy()
-model.compile(optimizer='adam',
-              loss=loss_fn,
-              metrics=['accuracy'])
-model.fit(x_train, y_train, epochs=5)
-model.evaluate(x_test,  y_test, verbose=2)
-probability_model = tf.keras.Sequential([
-  model,
-  tf.keras.layers.Softmax()
-])
-probability_model(x_test[:5])
+#把所有的图像做归一化处理（每张图片都是以每个像素的灰度值组成的数组来表示（0-255之间））
+x_train, x_test = X_train / 255.0, X_train / 255.0
+
+#--------------------------------------------------------------------------------------------------------
+#将所有标签组合成一个大列表并提取其最大值。由于我们从0开始，因此将为结果添加1，这是可以编码所有标签中所有值的最小列表大小。
+number_of_classes = 1 + max(np.append(y_train, y_test))
+#将整数标签列表转换为独热编码列表
+y_train = to_categorical(y_train, num_classes=number_of_classes)
+y_test = to_categorical(y_test, num_classes=number_of_classes)
+#--------------------------------------------------------------------
+#保存原始数据（数据和标签）
+original_y_train = y_train
+original_y_test = y_test
+#--------------------------------------------------------------------
+#将独热编码表示为常规Python列表（即不是NumPy数组）,index方法
+one_hot = [0, 0, 0, 1, 0, 0, 0, 0, 0, 0]
+one_hot.index(1)
+#表示为NumPy数组：argmax方法
+one_hot_np = np.array([0, 0, 0, 1, 0, 0, 0, 0, 0, 0])
+np.argmax(one_hot_np)
+#-------------------------------------------------------------------------------------------------------
+# 在这段代码中，我们反复覆盖X_train和X_test中的数据，以及y_train和y_test中的标签。这是预处理过程中的常用方法，
+# 因为我们不关心起始值或中间值。这种方法的好处是它带来了一定程度的简单性；缺点是如果我们想要访问原始数据，要么必
+# 须保存它（就像我们在这里为标签所做的那样），要么加载数据的新副本 
+#------------------------------------------------------------------------------------------------------- 
+
+#将图像展平为二维网格，因此每个样本只是一个数字列表（代表一张图片的信息）。这是全连接层所需的格式
+#X_train = np.reshape(X_train,[X_train.shape[0], number_of_pixels])
+#X_test = np.reshape(X_test, [X_test.shape[0], number_of_pixels])
+#第二种方法
+X_train = X_train.reshape([X_train.shape[0], number_of_pixels])
+X_test = X_test.reshape([X_test.shape[0], number_of_pixels])
+
+#Sequential：层列表架构 Functional：自定义列表架构
+#激活函数的选择：
+# 常见的选择是将“relu”和“tanh”用于隐藏层，将“softmax”或“sigmoid”用于输出层。默认值为“none”或线性激活函数。
+#-----------------------------------------------------------------
+#建立层列表架构
+def  make_one_hidden_layer_model():
+  model = tf.keras.models.Sequential()
+#创建一个全连接层，第一个参数：参数是层的大小，第二个参数：激活函数的类型，第三个参数：输入中每个维度的大小，input_shape只针对第一层
+  model.add(tf.keras.layers.Dense(number_of_pixels, activation='relu',input_shape=[number_of_pixels]))
+#再次添加一个全连接层 number_of_classes（第一个参数）：神经元的数量，第二个参数：激活函数的类型
+  model.add(tf.keras.layers.Dense(number_of_classes, activation='softmax'))
+#输出文本形式的模型
+  model.summary()
+#自定义一个优化器，学习率设定为0.0001
+  slow_adam = tf.keras.optimizers.Adam(lr=0.0001)
+#编译模型，指定优化器为slow_adam，损失函数为categorical_crossentropy，测量值列表返回accuracy来记录准确率
+  model.compile(optimizer=slow_adam,loss='′categorical_crossentropy',metrics=['accuracy'])
+  return model
+#调用方法
+model = make_one_hidden_layer_model() 
+#---------------------------------------------------------------------------------------------------
+#1.检查点
+#在训练期间检查我们的模型。这意味着将模型（或者，如果我们愿意，只是权重）保存到文件中 save_weights_only:只保存权重
+#period：10个epochs记录一次
+filename = 'SavedModels/weights-{epoch:02d}-{val_loss:.03f}.h5'
+filename += 'epoch-{epoch:03d}-acc-{acc:0.3f}.h5'
+#请注意，由于我们只输出了值的3位数，因此准确率可能没有明显提高。例如，如果它从0.9353变为0.9354，则两个文件都会将文件
+# 名中的准确率列为0.935。通过查看文件的时间戳，我们可以推断出最近生成的文件更好
+checkpointer = tf.keras.ModelCheckpoint(filename, monitor='acc',save_weights_only=True,period=10)
+#---------------------------------------------------------------------------------------------------
+#2.学习率
+sgd = SGD(lr=0.0, momentum=0.9, decay=0.0, nesterov=False)
+#将初始的学习率设置为0;
+model.compile(loss='categorical_crossentropy',optimizer=sgd, metrics=['accuracy'])
+#同光方法不断调整学习率
+def simpleSchedule(epoch_number):
+ return max(.1, 1-(0.01*epoch_number))
+lr_scheduler = LearningRateScheduler(simpleSchedule)
+one_hidden_layer_history =model.fit(x_train, y_train,validation_data=(X_test, y_test), epochs=20,batch_size=256, verbose=2,callbacks = [lr_scheduler])
+
+#3.及早停止
+#monitor:可以指定关注哪个参数：训练准确率“acc”、训练损失“loss”、验证准确率“val_acc”或验证损失“val_loss”
+#min_delta：min_delta是变化的监测值EarlyStopping()开始起作用的最小值。任何小于此数量的改变都将被忽略。默认情况下，此值为0，
+#patience：这是在决定fit( )应该停止训练之前等待情况好转的epoch数
+#verbose：。如果它决定停止训练，则输出一行文本，这样我们就可以查看输出并知道它进行了干预。
+early_stopper = EarlyStopping(monitor='val_loss', patience=10, verbose=1)
+history = model.fit(X_train, y_train,validation_data=(X_test, y_test),epochs=100, batch_size=256, verbose=2,callbacks=[early_stopper])
+
+#1.训练模型
+#2保存历史记录，它包含一堆总结训练过程的字段（比如它运行了多少个epoch，以及我们使用了哪些参数）。
+#one_hidden_layer_history：它是一个Python字典对象，包含每一个epoch后训练集和验证集的准确率和损失值。
+#batch_size:告诉fit( )从我们的训练集中提取出一个批大小的样本块应该有多大
+#verbose:它告诉系统在每一个epoch之后的更新结果,如果我们将其设置为0，则不输出任何内容；值为1会输出一个动态进度条，
+# 显示系统在每一个epoch通过样本的方式；值为2则仅输出每一个epoch后的单个文本摘要
+one_hidden_layer_history =model.fit(x_train, y_train,validation_data=(X_test, y_test), epochs=20,batch_size=256, verbose=2,callbacks = [checkpointer])
+
+#训练准确率
+one_hidden_layer_history['acc']
+#训练损失率
+one_hidden_layer_history['loss']
+#验证准确率
+one_hidden_layer_history['val_acc']
+#验证损失率
+one_hidden_layer_history['val_loss']
+#保存模型和权重
+model.save('my_model.h5')
+#加载模型
+model = tf.keras.load_model('my_model.h5')
+#仅保存权重 如果我们想以后使用这些权重，那么必须首先创建一个模型来接收它们
+model.save_weights('my_model_weights.h5')
+#仅保存框架:
+# 1.保存为yaml形式，yaml是JSON的超集，它可以完成JSON能做的所有事情
+filename = 'my_model_arch.yaml'
+yaml_string = model.to_yaml()
+with open(filename, 'w') as outfile:
+ yaml.dump(yaml_string, outfile)
+#2.保存为json格式，只需要替换所有yaml
+filename = 'my_model_arch_json.json'
+json_string = model.to_json()
+with open(filename, 'w') as outfile:
+ json.dump(json_string, outfile)
+#读取框架
+model =tf.keras.models.model_from_yaml(yaml_string)
+#无论是分享我们自己的训练模型，还是使用其他人的模型，我们都需要有关如何预处理训练数据的文档。作为作者，
+# 其工作是编写并以某种合理的格式提供该文档。作为采用者，其工作是在准备数据时找到这些信息并遵循它。
+
+
+# predictions = model(x_train[:1]).numpy()
+# predictions
+# tf.nn.softmax(predictions).numpy()
+# loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+# loss_fn(y_train[:1], predictions).numpy()
+
+# model.fit(x_train, y_train, epochs=5)
+# model.evaluate(x_test,  y_test, verbose=2)
+# probability_model = tf.keras.Sequential([
+#   model,
+#   tf.keras.layers.Softmax()
+# ])
+# probability_model(x_test[:5])
