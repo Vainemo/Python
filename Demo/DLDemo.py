@@ -139,18 +139,41 @@ with open(filename, 'w') as outfile:
 model =tf.keras.models.model_from_yaml(yaml_string)
 #无论是分享我们自己的训练模型，还是使用其他人的模型，我们都需要有关如何预处理训练数据的文档。作为作者，
 # 其工作是编写并以某种合理的格式提供该文档。作为采用者，其工作是在准备数据时找到这些信息并遵循它。
+#-----------------------------------------------------------第二部分--------------------------------------------
+def make_model(number_of_layers=2, neurons_per_layer=32,
+ dropout_ratio=0.2, optimizer='adam'):
+ model = tf.keras.models.Sequential()
+ model.add(tf.keras.models.Dense(neurons_per_layer,
+ input_shape=[number_of_pixels],
+ activation='relu', kernel_constraint=tf.keras.models.maxnorm(3)))
+ model.add(tf.keras.models.Dropout(dropout_ratio))
+ for i in range(number_of_layers-1):
+  model.add(tf.keras.models.Dense(neurons_per_layer,
+ activation='relu',
+ kernel_constraint=tf.keras.models.maxnorm(3)))
+ model.add(tf.keras.models.Dropout(dropout_ratio))
+ model.add(tf.keras.models.Dense(number_of_classes, activation='softmax'))
+ model.compile(loss='categorical_crossentropy',
+ optimizer=optimizer, metrics=['accuracy'])
+ return model
 
+from keras.wrappers.scikit_learn import KerasClassifier
+#当scikit-learn调用make_model()时，它将为函数的参数赋予我们在创建KerasClassifier时提供的值。
+#KerasClassifier:包装器
+#  实际上，包装器只接收我们提供给它的值，并将它们传递给同名的模型制作函数参数。，如果没用分配值，
+#将使用自身的默认参数
+#KerasClassifier()的最后3个参数（epochs、batch_size和verbose）不是给模型的，而是给scikit-learn的。
+# 它们被传递给交叉验证器的fit()例程以控制训练过程。
+kc_model = KerasClassifier(build_fn=make_model,
+ number_of_layers=2, neurons_per_layer=32,
+ optimizer = 'adam',
+ epochs=100, batch_size=256, verbose=0)
 
-# predictions = model(x_train[:1]).numpy()
-# predictions
-# tf.nn.softmax(predictions).numpy()
-# loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
-# loss_fn(y_train[:1], predictions).numpy()
-
-# model.fit(x_train, y_train, epochs=5)
-# model.evaluate(x_test,  y_test, verbose=2)
-# probability_model = tf.keras.Sequential([
-#   model,
-#   tf.keras.layers.Softmax()
-# ])
-# probability_model(x_test[:5])
+from sklearn.model_selection import StratifiedKFold
+#交叉验证器
+kfold = StratifiedKFold(n_splits=10, shuffle=True,
+ random_state=random_seed)
+#记录分数
+from sklearn.model_selection import cross_val_score
+results = cross_val_score(kc_model, X_train, original_y_train,
+ cv=kfold, verbose=0)
