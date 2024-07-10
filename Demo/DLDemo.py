@@ -5,7 +5,7 @@ from keras import backend as keras_backend
 from keras.callbacks import LearningRateScheduler
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping
-import yaml
+#import yaml
 import json
 # 加载MNIST数据集
 mnist = tf.keras.datasets.mnist
@@ -129,33 +129,32 @@ model.save_weights('my_model_weights.h5')
 filename = 'my_model_arch.yaml'
 yaml_string = model.to_yaml()
 with open(filename, 'w') as outfile:
- yaml.dump(yaml_string, outfile)
+#yaml.dump(yaml_string, outfile)
 #2.保存为json格式，只需要替换所有yaml
-filename = 'my_model_arch_json.json'
-json_string = model.to_json()
-with open(filename, 'w') as outfile:
- json.dump(json_string, outfile)
+#filename = 'my_model_arch_json.json'
+#json_string = model.to_json()
+#with open(filename, 'w') as outfile:
+#json.dump(json_string, outfile)
 #读取框架
-model =tf.keras.models.model_from_yaml(yaml_string)
+#model =tf.keras.models.model_from_yaml(yaml_string)
 #无论是分享我们自己的训练模型，还是使用其他人的模型，我们都需要有关如何预处理训练数据的文档。作为作者，
 # 其工作是编写并以某种合理的格式提供该文档。作为采用者，其工作是在准备数据时找到这些信息并遵循它。
 #-----------------------------------------------------------第二部分--------------------------------------------
-def make_model(number_of_layers=2, neurons_per_layer=32,
- dropout_ratio=0.2, optimizer='adam'):
- model = tf.keras.models.Sequential()
- model.add(tf.keras.models.Dense(neurons_per_layer,
- input_shape=[number_of_pixels],
- activation='relu', kernel_constraint=tf.keras.models.maxnorm(3)))
- model.add(tf.keras.models.Dropout(dropout_ratio))
- for i in range(number_of_layers-1):
-  model.add(tf.keras.models.Dense(neurons_per_layer,
- activation='relu',
- kernel_constraint=tf.keras.models.maxnorm(3)))
- model.add(tf.keras.models.Dropout(dropout_ratio))
- model.add(tf.keras.models.Dense(number_of_classes, activation='softmax'))
- model.compile(loss='categorical_crossentropy',
- optimizer=optimizer, metrics=['accuracy'])
- return model
+ def  make_model(number_of_layers=2, neurons_per_layer=32,dropout_ratio=0.2, optimizer='adam'):
+   model = tf.keras.models.Sequential()
+   model.add(tf.keras.models.Dense(neurons_per_layer,
+   input_shape=[number_of_pixels],
+   activation='relu', kernel_constraint=tf.keras.models.maxnorm(3)))
+   model.add(tf.keras.models.Dropout(dropout_ratio))
+   for i in range(number_of_layers-1):
+     model.add(tf.keras.models.Dense(neurons_per_layer,
+     activation='relu',
+     kernel_constraint=tf.keras.models.maxnorm(3)))
+     model.add(tf.keras.models.Dropout(dropout_ratio))
+     model.add(tf.keras.models.Dense(number_of_classes, activation='softmax'))
+     model.compile(loss='categorical_crossentropy',optimizer=optimizer, metrics=['accuracy'])
+   return model
+
 
 from keras.wrappers.scikit_learn import KerasClassifier
 #当scikit-learn调用make_model()时，它将为函数的参数赋予我们在创建KerasClassifier时提供的值。
@@ -171,9 +170,9 @@ kc_model = KerasClassifier(build_fn=make_model,
 
 from sklearn.model_selection import StratifiedKFold
 #交叉验证器
-kfold = StratifiedKFold(n_splits=10, shuffle=True,
- random_state=random_seed)
+#kfold = StratifiedKFold(n_splits=10, shuffle=True,#
+#random_state=random_seed)
 #记录分数
 from sklearn.model_selection import cross_val_score
-results = cross_val_score(kc_model, X_train, original_y_train,
- cv=kfold, verbose=0)
+#results = cross_val_score(kc_model, X_train, original_y_train,
+ #cv=kfold, verbose=0)
