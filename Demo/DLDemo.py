@@ -5,8 +5,10 @@ from keras import backend as keras_backend
 from keras.callbacks import LearningRateScheduler
 from keras.optimizers import SGD
 from keras.callbacks import EarlyStopping
+random_seed = 42
 #import yaml
 import json
+np.random.seed(random_seed)
 # 加载MNIST数据集
 mnist = tf.keras.datasets.mnist
 # 例程mnist.load_data()返回一个训练集和一个测试集
@@ -170,9 +172,35 @@ kc_model = KerasClassifier(build_fn=make_model,
 
 from sklearn.model_selection import StratifiedKFold
 #交叉验证器
-#kfold = StratifiedKFold(n_splits=10, shuffle=True,#
-#random_state=random_seed)
+kfold = StratifiedKFold(n_splits=10, shuffle=True,#
+random_state=random_seed)
 #记录分数
 from sklearn.model_selection import cross_val_score
-#results = cross_val_score(kc_model, X_train, original_y_train,
- #cv=kfold, verbose=0)
+results = cross_val_score(kc_model, X_train, original_y_train,
+ cv=kfold, verbose=0)
+print('results = {}\nresults.mean = {}'.format(
+ results, results.mean()))
+#创建pipeline
+from sklearn.pipeline import Pipeline
+from sklearn.preprocessing import MinMaxScaler
+estimators = []
+estimators.append(('normalize_step', MinMaxScaler()))
+estimators.append(('model_step', kc_model))
+pipeline = Pipeline(estimators)
+#使用简写符号创建pipeline，每个步骤都没有名称。这两个pipeline对象是相同的。唯一的区别是，在第一个版本
+#中，我们给每个步骤取了自己的名字。
+pipeline = make_pipeline(MinMaxScaler(), kc_model)
+#创建一个字典来搜索模型的3个参数：全连接层的数量（每个都有dropout），
+# 全连接层的神经元的数量，以及两个不同的优化器。
+param_grid = dict(model__number_of_layers=[ 2, 3, 4 ],
+ model__neurons_per_layer=[ 20, 30, 40 ],
+ model__optimizer=['adam', 'adadelta'])
+#创建GridSearchCV对象，该对象将遍历参数网格，为每个选项组合组装一个模
+#型，并交叉验证该模型
+from sklearn.model_selection import GridSearchCV
+grid_searcher = GridSearchCV(estimator=pipeline,
+ param_grid=param_grid, verbose=2)
+#search_results1中的一个对象是一个名为cv_results_的字典,cv_results_字典包含关于交叉验证结果的详细信息。
+#“params”项告诉我们这组参数对应的每个分数。“mean_test_score”项告诉我们每组参数的交叉验证平均值。
+search_results1 = grid_searcher.fit(X_train, original_y_train)
+
