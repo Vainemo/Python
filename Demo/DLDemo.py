@@ -100,7 +100,7 @@ one_hidden_layer_history =model.fit(x_train, y_train,validation_data=(X_test, y_
 #monitor:可以指定关注哪个参数：训练准确率“acc”、训练损失“loss”、验证准确率“val_acc”或验证损失“val_loss”
 #min_delta：min_delta是变化的监测值EarlyStopping()开始起作用的最小值。任何小于此数量的改变都将被忽略。默认情况下，此值为0，
 #patience：这是在决定fit( )应该停止训练之前等待情况好转的epoch数
-#verbose：。如果它决定停止训练，则输出一行文本，这样我们就可以查看输出并知道它进行了干预。
+#verbose：如果它决定停止训练，则输出一行文本，这样我们就可以查看输出并知道它进行了干预。
 early_stopper = EarlyStopping(monitor='val_loss', patience=10, verbose=1)
 history = model.fit(X_train, y_train,validation_data=(X_test, y_test),epochs=100, batch_size=256, verbose=2,callbacks=[early_stopper])
 
