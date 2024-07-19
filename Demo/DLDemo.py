@@ -72,7 +72,7 @@ def  make_one_hidden_layer_model():
 #自定义一个优化器，学习率设定为0.0001
   slow_adam = tf.keras.optimizers.Adam(lr=0.0001)
 #编译模型，指定优化器为slow_adam，损失函数为categorical_crossentropy，测量值列表返回accuracy来记录准确率
-  model.compile(optimizer=slow_adam,loss='′categorical_crossentropy',metrics=['accuracy'])
+  model.compile(optimizer=slow_adam,loss=''categorical_crossentropy',metrics=['accuracy'])
   return model
 #调用方法
 model = make_one_hidden_layer_model() 
@@ -203,4 +203,30 @@ grid_searcher = GridSearchCV(estimator=pipeline,
 #search_results1中的一个对象是一个名为cv_results_的字典,cv_results_字典包含关于交叉验证结果的详细信息。
 #“params”项告诉我们这组参数对应的每个分数。“mean_test_score”项告诉我们每组参数的交叉验证平均值。
 search_results1 = grid_searcher.fit(X_train, original_y_train)
+#输入层（函数式API需要的，784个元素）
+input_layer = Input(shape=[784])
+#形状为28×28×1的输入张量
+input_layer = Input(shape=[28,28,1])
+input = Input(shape=(784,))
+dense_1 = Dense(1000, activation='relu')
+dense_2 = Dense(500, activation='relu')
+output = Dense(1, activation='sigmoid')
+#构建连接层
+C1_input = input
+C1_dense_1 = dense_1(C1_input)
+C1_dense_2 = dense_2(C1_dense_1)
+C1_output = output(C1_dense_2)
+#基于输入和输出连接层构建模型。其他层被隐含在内
+network_1 = Model(C1_input, C1_output)
 
+#  用一些来自第一个模型的网络层构建新模型
+convo_1 = Conv2D(32, (5,5))
+flatten_1 = Flatten()
+# Build the new connection layers
+C2_input = input
+C2_dense_1 = dense_1(C2_input)
+C2_convo_1 = convo_1(C2_dense_1)
+C2_flatten_1 = flatten_1(C2_convo_1)
+C2_output = output(C2_flatten_1)
+# build the model
+model2 = Model(C2_input, C2_output)
