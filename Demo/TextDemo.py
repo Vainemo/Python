@@ -6,9 +6,8 @@ import re
 import shutil
 import string
 import tensorflow as tf
-
-from tensorflow.keras import layers
-from tensorflow.keras import losses
+from keras import layers
+from keras import losses
 #下载评论文本文件
 url = "https://ai.stanford.edu/~amaas/data/sentiment/aclImdb_v1.tar.gz"
 #1.aclImdb_v1：文件名 
@@ -86,7 +85,7 @@ test_ds=test_ds.cache().prefetch(buffer_size=AUTOTUNE)
 embedding_dim = 16
 model=tf.keras.Sequential([
     layers.Embedding(max_features+1,embedding_dim),
-    layers.dropout(0,2)
+    layers.dropout(0,2),
     #平均池化层：通过对序列维度求平均值来为每个样本返回一个定长输出向量。这允许模型以尽可能最简单的方式处理变长输入。
     layers.GlobalAveragePoolingID(),
     layers.Dropout(0,2),

@@ -72,7 +72,7 @@ def  make_one_hidden_layer_model():
 #自定义一个优化器，学习率设定为0.0001
   slow_adam = tf.keras.optimizers.Adam(lr=0.0001)
 #编译模型，指定优化器为slow_adam，损失函数为categorical_crossentropy，测量值列表返回accuracy来记录准确率
-  model.compile(optimizer=slow_adam,loss=''categorical_crossentropy',metrics=['accuracy'])
+  model.compile(optimizer=slow_adam,loss='categorical_crossentropy',metrics=['accuracy'])
   return model
 #调用方法
 model = make_one_hidden_layer_model() 
@@ -181,7 +181,7 @@ results = cross_val_score(kc_model, X_train, original_y_train,
 print('results = {}\nresults.mean = {}'.format(
  results, results.mean()))
 #创建pipeline
-from sklearn.pipeline import Pipeline
+from sklearn.pipeline import Pipeline, make_pipeline
 from sklearn.preprocessing import MinMaxScaler
 estimators = []
 estimators.append(('normalize_step', MinMaxScaler()))

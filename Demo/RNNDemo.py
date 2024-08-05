@@ -2,6 +2,7 @@ from sklearn.preprocessing import MinMaxScaler
 import numpy as np
 import math 
 from sklearn.metrics import mean_squared_error
+from keras import Dropout, Dense, LSTM
 window_size=3
 #制作正弦波数据
 def sum_of_sines(number_of_steps, d_theta, skip_steps,
@@ -57,7 +58,7 @@ def samples_and_targets_from_sequence(sequence, window_size):
 #创建一个LSTM层对象。第一个参数是这层中LSTM单元的数量。第二个参数是input_shape，告
 #诉了单个样本的尺寸。
 
-lstm_layer = LSTM(3, input_shape=[window_size, 1]
+lstm_layer = LSTM(3, input_shape=[window_size, 1])
 model = Sequential()
 model.add(lstm_layer)
 model.add(Dense(1, activation=None))

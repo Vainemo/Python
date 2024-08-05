@@ -16,7 +16,7 @@ test_images = test_images / 255.0
 #figure:创建一个新图形，大小为10*10
 plt.figure(figsize=(10,10))
 
-for i in range(26):
+for i in range(25):
     #subplot在一个图形中创建多个子图。第五行第五列的第i+个子图
     plt.subplot(5,5,i+1)
     #设置 x 轴和 y 轴的刻度
@@ -26,28 +26,28 @@ for i in range(26):
     plt.grid(False)
     plt.imshow(train_images[i],cmap=plt.cm.binary)
     plt.xlabel(class_names[train_labels[i]])
-plt.show()
+# plt.show()
 
-model=tf.keras.Sequential({
+model=tf.keras.Sequential([
     #平整层，将数据从二维数据转换为一维数据
-    tf.keras.layers.Flatten(input_shape(28,28)),
+    tf.keras.layers.Flatten(input_shape=(28,28)),
     #两个全连接层，第一个有128个神经元，第二个有10个，给出10个输出
     tf.keras.layers.Dense(128,activation='relu'),
     tf.keras.layers.Dense(10)
-})
+])
 #设定优化器，损失函数和指标
-model.compile(optimizer='adam',loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),metrice=['accuracy'])
+model.compile(optimizer='adam',loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),metrics=['accuracy'])
 
 #开始训练
 model.fit(train_images,train_labels,epochs=10)
 
 #评估准确率，比较模型在测试数据集上的表现
-test_loss,test_acc=model.evaluate(test_images,verbose=2)
+test_loss,test_acc=model.evaluate(test_images,test_lavles,verbose=2)
 print('测试集准确率：',test_acc)
 
 #进行预测
 #Softmax:归一化指数函数可以把输出项的得分变成概率
-probability_model=tf.keras.Sequetial([model,tf.keras.layers.Softmax()])
+probability_model=tf.keras.Sequential([model,tf.keras.layers.Softmax()])
 #predictions为所有测试集的预测结果
 predictions=probability_model.predict(test_images)
 
