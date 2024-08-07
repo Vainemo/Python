@@ -197,4 +197,11 @@ print(dir(fibo))
 #构造函数__init__(self):
 #  1.self它用于引用类的当前实例,
 
+list1 = [1, 2, 3, 4]
+list2 = ['a', 'b']
+#zip函数将 list1 和 list2 中的对应元素打包成元组，并返回一个迭代器。
+# list() 函数将这个迭代器转换为一个列表。
+zipped = zip(list1, list2)
+print(list(zipped))
+#结果[(1, 'a'), (2, 'b'), (3, 'c')]
 
