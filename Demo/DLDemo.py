@@ -84,6 +84,7 @@ filename = 'SavedModels/weights-{epoch:02d}-{val_loss:.03f}.h5'
 filename += 'epoch-{epoch:03d}-acc-{acc:0.3f}.h5'
 #请注意，由于我们只输出了值的3位数，因此准确率可能没有明显提高。例如，如果它从0.9353变为0.9354，则两个文件都会将文件
 # 名中的准确率列为0.935。通过查看文件的时间戳，我们可以推断出最近生成的文件更好
+#tf.keras.callbacks.ModelCheckpoint 回调允许您在训练期间和结束时持续保存模型。
 checkpointer = tf.keras.ModelCheckpoint(filename, monitor='acc',save_weights_only=True,period=10)
 #---------------------------------------------------------------------------------------------------
 #2.学习率
@@ -120,6 +121,12 @@ one_hidden_layer_history['loss']
 one_hidden_layer_history['val_acc']
 #验证损失率
 one_hidden_layer_history['val_loss']
+#保存模型有三种结构：
+  #1.keras（推荐使用的）
+  #2.HDF5
+  #3.SavedModel 
+#区别：.keras/HDF5 格式使用对象配置来保存模型架构，而 SavedModel 保存执行计算图
+#因此，SavedModels 能够保存自定义对象，例如子类化模型和自定义层，而无需原始代码
 #保存模型和权重
 model.save('my_model.h5')
 #加载模型
