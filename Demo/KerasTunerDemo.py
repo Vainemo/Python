@@ -24,7 +24,7 @@ def Model_builder(hp):
     # name：超参数的名称（例如 'learning_rate'）。
     # values：该超参数的可选值列表（例如 [32, 64, 128]）。
     hp_learning_rate=hp.choice('learning_rate',values=[1e-2,1e-3,1e-4])
-    model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate),loss=keras.losses.SparseCategoricalCrossentropy(from_logits=true),
+    model.compile(optimizer=keras.optimizers.Adam(learning_rate=hp_learning_rate),loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
                   metrics=['accuracy'])
     return model
 #调节器：Keras Tuner 提供了四种调节器
