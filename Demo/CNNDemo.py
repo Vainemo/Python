@@ -151,7 +151,7 @@ image_generator = ImageDataGenerator(
 #flow()时设置seed参数来强制执行此操作
 #不同点：这里需要指定每个epochs的大小
 #原因：只要我们继续调用生成器，它就会不断地产生变体（数据越来越多），因此遍历通常称为一个epoch的“所有数据”
-#并不会有真正意义，。例如，统计信息是在一个epoch结束时被采集的，我们的回调函数也是此时被调用的。因此
+#并不会有真正意义。例如，统计信息是在一个epoch结束时被采集的，我们的回调函数也是此时被调用的。因此
 #我们告诉flow()在它简单地声明一个epoch结束之前要生成多少张图像
 model.fit_generator(image_generator.flow(
  X_train, y_train, batch_size=256),
