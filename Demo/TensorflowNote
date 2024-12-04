@@ -13,3 +13,13 @@
 3.TensorFlow和TensorFlow Hub两者区别
   TensorFlow：提供了从模型定义、训练到部署的完整工具链。
   TensorFlow Hub：主要提供预训练模型和模块，以便在不同任务上进行迁移学习和快速构建模型。
+
+4.张量(tf.Tensor)
+  TensorFlow的张量类型:tf.Tensor 
+   在运行过程中TensorFlow 运算会自动将 NumPy ndarray (Python的基础数组库)转换为张量。
+   NumPy 运算会自动将张量转换为 NumPy ndarray。
+   
+5.tf.Tensor 和NumPy ndarray的不同:
+   1.张量可以驻留在加速器内存（例如 GPU、TPU）中。
+   2.张量不可变。
+     
