@@ -123,4 +123,4 @@ for i in range(number_of_epochs):
  model = Sequential()
 model.add(LSTM(4, return_sequences=True,
  input_shape=[window_size, 1]))
-model.add(TimeDistributed(Dense(5))
+model.add(TimeDistributed(Dense(5)))
